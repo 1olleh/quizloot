@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuizLoot Ultimate 4.0</title>
+<style>
+body {margin:0;font-family:"Nunito",sans-serif;background:linear-gradient(135deg,#ffd6e8,#d6f0ff);color:#333;}
+.hidden{display:none;}
+header{background:#fff;padding:12px;box-shadow:0 4px 12px rgba(0,0,0,.15);display:flex;justify-content:space-between;align-items:center;}
+header h1{margin:0;font-size:22px;}
+header span{font-size:14px;}
+nav{display:flex;justify-content:space-around;background:#fff;box-shadow:0 -4px 10px rgba(0,0,0,.15);position:fixed;bottom:0;width:100%;}
+nav button{background:none;border:none;padding:12px;font-size:14px;cursor:pointer;}
+section{padding:16px;padding-bottom:80px;}
+.card{background:#fff;border-radius:16px;box-shadow:0 6px 14px rgba(0,0,0,.15);padding:16px;margin-bottom:16px;}
+button.primary{background:linear-gradient(135deg,#ff9ad5,#7fd8ff);border:none;color:white;padding:12px 16px;border-radius:12px;font-size:16px;width:100%;cursor:pointer;}
+button.primary:hover{filter:brightness(1.1);}
+.chat{height:120px;overflow-y:auto;background:#f6f6f6;border-radius:12px;padding:8px;}
+.chat p{margin:4px 0;}
+.avatar{width:48px;height:48px;border-radius:12px;display:inline-flex;justify-content:center;align-items:center;font-size:24px;margin:4px;cursor:pointer;transition: transform 0.2s;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,.1);}
+.avatar img{width:100%;height:100%;border-radius:12px;}
+.avatar:hover{transform:scale(1.2);}
+</style>
+</head>
+<body>
+
+<header>
+<h1>QuizLoot Ultimate 4.0</h1>
+<span id="userInfo">Guest</span>
+</header>
+
+<section id="home">
+<div class="card">
+<h2>Welcome!</h2>
+<p>Play quizzes, collect cute characters, earn Quoins, and battle bots 🤖</p>
+<button class="primary" onclick="show('play')">Play</button>
+</div>
+</section>
+
+<section id="play" class="hidden">
+<div class="card">
+<h2>Lobby</h2>
+<p>Game Code: <b id="gameCode"></b></p>
+<button onclick="addBot()">Add Bot</button>
+<button class="primary" onclick="beginGame()">Start Game</button>
+</div>
+</section>
+
+<section id="game" class="hidden">
+<div class="card">
+<h2 id="question">Question will appear here</h2>
+<button onclick="answer(true)">Answer A</button>
+<button onclick="answer(false)">Answer B</button>
+</div>
+<div class="card">
+<h3>Chat</h3>
+<div class="chat" id="chat"></div>
+<input type="text" id="chatInput" placeholder="Type message..." onkeydown="if(event.key==='Enter'){sendChat();}">
+<button onclick="sendChat()">Send</button>
+</div>
+</section>
+
+<section id="mail" class="hidden">
+<div class="card">
+<h2>Mail 📬</h2>
+<p>You have a daily crate 🎁</p>
+<button class="primary" onclick="openCrate()">Open Crate</button>
+</div>
+</section>
+
+<section id="inventory" class="hidden">
+<div class="card">
+<h2>Inventory</h2>
+<div id="itemList"></div>
+</div>
+<div class="card">
+<h2>Character Selection</h2>
+<div id="avatars"></div>
+</div>
+</section>
+
+<section id="shop" class="hidden">
+<div class="card">
+<h2>Shop 🛒</h2>
+<p>Quoins: <span id="coins">0</span></p>
+<button class="primary" onclick="buyItem('Extra Crate',50)">Buy Extra Crate - 50 Quoins</button>
+</div>
+</section>
+
+<section id="admin" class="hidden">
+<div class="card">
+<h2>Admin Panel</h2>
+<button onclick="giveReward()">Give Reward</button>
+<button onclick="spawnBots()">Spawn Bots</button>
+<button onclick="showLogs()">View Logs</button>
+</div>
+</section>
+
+<nav>
+<button onclick="show('home')">Home</button>
+<button onclick="show('play')">Play</button>
+<button onclick="show('mail')">Mail</button>
+<button onclick="show('inventory')">Inventory</button>
+<button onclick="show('shop')">Shop</button>
+<button id="adminBtn" class="hidden" onclick="show('admin')">Admin</button>
+</nav>
+
+<script>
+// ===== USER =====
+const OWNER_EMAILS=["joyeeye2025@stmc.ie","joyee.ire@gmail.com"];
+const OWNER_USERNAME="Sprite_Finder";
+let user={username:OWNER_USERNAME,email:OWNER_EMAILS[0],score:0,isOwner:true,inventory:[],avatar:null,coins:500};
+document.getElementById("userInfo").innerText=user.username+" ⭐";
+document.getElementById("coins").innerText=user.coins;
+
+// ===== NAV =====
+function show(id){document.querySelectorAll("section").forEach(s=>s.classList.add("hidden"));document.getElementById(id).classList.remove("hidden");}
+if(user.isOwner){document.getElementById("adminBtn").classList.remove("hidden");}
+
+// ===== GAME =====
+let bots=[];
+document.getElementById("gameCode").innerText=Math.random().toString(36).substring(2,7).toUpperCase();
+function addBot(){bots.push({name:"Bot"+Math.floor(Math.random()*999),level:Math.floor(Math.random()*10)+1});}
+function beginGame(){show("game");askQuestion();}
+const questions=["Is QuizLoot cute?","Do you like pastel colors?","Are bots fun?"];
+function askQuestion(){const q=questions[Math.floor(Math.random()*questions.length)];document.getElementById("question").innerText=q;bots.forEach(bot=>{setTimeout(()=>botTalk(bot),bot.level*500);});}
+function answer(correct){if(correct){user.score+=100;playSound('correct');}else playSound('wrong');askQuestion();}
+
+// ===== CHAT & EMOJI =====
+const emojiLevels=[["🙂"],["🙂","😎"],["🙂","😎","🔥"],["🙂","😎","🔥","💯"]];
+function botTalk(bot){const e=emojiLevels[Math.min(bot.level-1,emojiLevels.length-1)][Math.floor(Math.random()*4)]; const chat=document.getElementById("chat"); chat.innerHTML+=`<p><b>${bot.name}</b>: Nice! ${e}</p>`; chat.scrollTop=chat.scrollHeight;}
+function sendChat(){const input=document.getElementById("chatInput"); if(input.value.trim()==="") return; const chat=document.getElementById("chat"); chat.innerHTML+=`<p><b>${user.username}</b>: ${input.value}</p>`; chat.scrollTop=chat.scrollHeight; input.value="";}
+
+// ===== MAIL & CRATES =====
+const characters=[];
+for(let i=1;i<=500;i++){characters.push("Char"+i);}
+function openCrate(){const c=characters[Math.floor(Math.random()*characters.length)]; user.inventory.push(c); alert("You got a cute character: "+c+" 🐾"); playSound('crate'); confetti(); updateInventory();}
+
+// ===== INVENTORY =====
+function updateInventory(){const list=document.getElementById("itemList"); list.innerHTML=""; user.inventory.forEach(item=>{const div=document.createElement("div"); div.className="card"; div.innerText=item; list.appendChild(div);}); showAvatars();}
+function showAvatars(){const avatars=document.getElementById("avatars"); avatars.innerHTML=""; user.inventory.forEach(item=>{const div=document.createElement("div"); div.className="avatar"; div.innerHTML=`<img src="https://placekitten.com/50/50?image=${Math.floor(Math.random()*16)}" title="${item}">`; div.onclick=()=>{user.avatar=item; alert(item+" selected!");}; avatars.appendChild(div);});}
+
+// ===== SHOP =====
+function buyItem(name,cost){if(user.coins>=cost){user.coins-=cost; alert("Bought "+name); user.inventory.push(name); updateInventory();}else alert("Not enough Quoins!"); document.getElementById("coins").innerText=user.coins;}
+
+// ===== ADMIN =====
+function giveReward(){alert("Reward sent!"); playSound('reward');}
+function spawnBots(){for(let i=0;i<3;i++) addBot();}
+function showLogs(){alert("Suspicious activity logs appear here.");}
+
+// ===== SOUND & CONFETTI =====
+function playSound(type){console.log("Sound:",type);}
+function confetti(){console.log("🎉 Confetti!");}
+
+// ===== INITIAL SETUP =====
+show("home"); updateInventory();
+</script>
+
+</body>
+</html>
